@@ -1,0 +1,167 @@
+!!
+!!
+!! 3. SOLID MODEL
+!!
+!!
+/prep7
+
+! Solid model components:
+! COMPA_Embankment
+! COMPA_Abutment
+!
+! COMPA_boundingBox
+! COMPA_trapeze
+! COMPA_abtBoundingBox
+! COMPA_pileBoundingBox
+! COMPA_negative
+
+!!
+!! 3.1 DRAW EMBANKMENT
+!!
+
+!! 3.1.1 DRAW AREAS
+!!
+
+!! 3.1.1.1 RAW EMBANKMENT
+wpcsys,-1,0
+
+! Draw bounding box
+blc4,-GEO_wBot,-GEO_depth,GEO_Wtot,GEO_hTot
+cm,COMPA_boundingBox,area
+
+! Slice borders to prepare for boundary conditions
+cmsel,s,COMPA_boundingBox
+wpsliceyz,FEM_EMBK_esize-GEO_wBot
+wpsliceyz,GEO_w+GEO_wTop-FEM_EMBK_esize
+wpslicexz,FEM_EMBK_esize-GEO_depth
+cm,COMPA_boundingBox,area
+
+! Draw negative trapeze
+asel,u,area,,all
+ptxy,-GEO_wBot,0,0,0,GEO_w,GEO_h,-GEO_wBot,GEO_h
+poly
+cm,COMPA_trapeze,area
+!
+!! 3.1.1.2 ADJUST TO ABUTMENT
+*if,GEO_ABT_opt,eq,1,then
+    ! Abutment included:
+
+    wpcsys,-1,0
+
+    ! Slice tip off trapeze
+    cmsel,s,COMPA_trapeze
+    xSlice=GEO_xOff+GEO_CAP_w
+    wpsliceyz,xSlice
+    asel,u,loc,x,-GEO_wBot,xSlice
+    adele,all,,,1
+    allsel
+    cmsel,u,COMPA_boundingBox
+    cm,COMPA_trapeze,area
+
+    wpcsys,-1,0
+    wpoffs,GEO_xOff,GEO_yOff
+
+        ! Draw positive below-cap complement
+        asel,u,area,,all
+        blc4,GEO_CAP_w-GEO_CAP_e,0,GEO_CAP_e+GEO_REFILL_w,-GEO_PILE_l
+        cm,COMPA_wallCapComplement,area
+
+        ! Draw bounding box around pile cap + wall
+        asel,u,area,,all
+        blc4,0,0,GEO_CAP_w,GEO_CAP_h+GEO_WALL_h
+        cm,COMPA_abtBoundingBox,area
+
+        ! Draw bounding box around pile
+        blc5,GEO_CAP_w/2,-GEO_PILE_l/2,GEO_PILE_d,GEO_PILE_l
+        cm,COMPA_pileBoundingBox,area
+
+        ! Subtract below-cap complement from trapeze
+        cmsel,s,COMPA_trapeze
+        cmsel,a,COMPA_wallCapComplement
+        asba,COMPA_trapeze,COMPA_wallCapComplement,,delete,delete
+        *get,compExistenceCheck,comp,COMPA_wallCapComplement,type
+        *if,compExistenceCheck,gt,0,then
+            adele,COMPA_wallCapComplement
+        *endif
+        cm,COMPA_trapeze,area
+
+        ! Add above-cap rectangular area to trapeze
+        cmsel,a,COMPA_trapeze
+        blc4,GEO_CAP_w-GEO_WALL_t,GEO_CAP_h,-(GEO_ABT_step+GEO_wBot),GEO_WALL_h
+        aovlap,all
+        cm,COMPA_trapeze,area
+
+    wpcsys,-1,0
+*endif
+!
+!
+!! 3.1.2 SUBTRACT AREAS
+!!
+
+!! 3.1.2.1 RAW EMBANKMENT
+! Subtract trapeze from bounding box
+cmsel,s,COMPA_boundingBox
+cmsel,a,COMPA_trapeze
+asba,COMPA_boundingBox,COMPA_trapeze,,delete,delete
+cm,COMPA_Embankment,area
+
+!! 3.1.2.2 ADJUST TO ABUTMENT
+*if,GEO_ABT_opt,eq,1,then
+    ! Abutment included:
+
+    ! Subtract abutment and pile bounding boxes from embankment
+    cmsel,s,COMPA_pileBoundingBox
+    cmsel,a,COMPA_abtBoundingBox
+    cm,COMPA_negative,area
+    cmsel,a,COMPA_Embankment
+    asba,COMPA_Embankment,COMPA_negative,,delete,delete
+    cm,COMPA_Embankment,area
+*endif
+!
+!
+!
+!!
+!! 3.2 DRAW ABUTMENT
+!!
+*if,GEO_ABT_opt,eq,0,then
+    ! No abutment:
+
+    asel,u,area,,all
+    cm,COMPA_Abutment,area
+
+*elseif,GEO_ABT_opt,eq,1,then
+    ! Abutment included:
+
+    wpcsys,,0
+    wpoffs,GEO_xOff,GEO_yOff
+
+    asel,u,area,,all
+
+    ! Draw pile cap
+    blc4,0,0,GEO_CAP_w,GEO_CAP_h
+
+    ! Draw pile
+    blc5,GEO_CAP_w/2,-GEO_PILE_l/2,GEO_PILE_d,GEO_PILE_l
+
+    ! Draw retaining wall
+    blc4,GEO_CAP_w-GEO_WALL_t,GEO_CAP_h,GEO_WALL_t,GEO_WALL_h
+
+    aglue,all
+    cm,COMPA_Abutment,area
+*endif
+
+wpcsys,,0
+wpstyl,,,,,,,,-1
+!
+!
+!
+!!
+!! 3.3 DISPLAY OPTIONS
+!!
+allsel
+/color,cm,oran,COMPA_Embankment
+/color,cm,lgra,COMPA_Abutment
+aplot
+takepic,'SM'
+
+

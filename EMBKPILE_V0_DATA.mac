@@ -1,0 +1,117 @@
+! /input,'D:\Cloud\Code\02 APDL\04 Structures\07 Pile Embankment\EMBKPILE_V0_DATA.mac'
+!!
+!!
+!! 1. INPUT DATA
+!!
+!!
+
+!!
+!! 1.1 GEOMETRY
+!!
+
+!! 1.1.1 EMBANKMENT
+!!
+! Height
+GEO_h=12
+
+! Width at the top
+GEO_wTop=12
+
+! Width at the base
+GEO_wBot=12
+
+! Depth below base
+GEO_depth=6
+
+! Slope angle (in degrees)
+GEO_theta=45
+!
+!
+!! 1.1.2 ABUTMENT
+!!
+! Abutment option:
+!    [0] No abutment
+!    [1] Include abutment
+GEO_ABT_opt=1
+
+! Pile length
+GEO_PILE_l=9
+
+! Pile diameter
+GEO_PILE_d=0.4
+
+! Pile cap height
+GEO_CAP_h=1.2
+
+! Pile cap width
+GEO_CAP_w=1.5
+
+! Retaining wall height (above pile cap)
+GEO_WALL_h=2
+
+! Retaining wall thickness
+GEO_WALL_t=0.4
+
+! Horizontal distance between foot of the embankment and back of the retaining wall
+GEO_ABT_step=8.7
+!
+!
+!
+!!
+!! 1.2 MATERIALS
+!!
+! Soil-concrete friction coefficient
+MAT_mu=0.3
+
+!! 1.2.1 SOIL
+!!
+MAT_SOIL_E=100e6
+MAT_SOIL_poisson=0.2
+MAT_SOIL_dens=1800
+!
+!
+!! 1.2.2 CONCRETE
+!!
+MAT_CONC_fck=40e6
+MAT_CONC_poisson=0.3
+MAT_CONC_dens=2500
+!
+!
+!
+!!
+!! 1.3 MESH
+!!
+FEM_EMBK_esize=0.5
+FEM_ABT_esize=0.1
+!
+!
+!
+!!
+!! 1.4 LOADS
+!!
+! Gravitational acceleration (used to calculate dead weight)
+LOAD_g=9.81
+
+! Horizontal force at the top of the pile cap ( > 0: to the left)
+LOAD_ABT_fh=0 !200e3
+
+! Vertical force at the top of the pile cap ( > 0: downwards)
+LOAD_ABT_fv=700e3
+
+! Uniform load at the top of the embankment
+LOAD_EMBK_q=30e3
+!
+!
+!
+!!
+!! 1.5 SOLUTION
+!!
+! Number of substeps
+SOLU_nsubst=100
+
+
+
+!!
+EMBKPILE_V0_MODEL
+
+

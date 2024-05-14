@@ -1,0 +1,118 @@
+! EMBKPILE_V0_FEM
+
+!!
+!!
+!! 4. MESH
+!!
+!!
+
+!!
+!! 4.1 EMBANKMENT
+!!
+cmsel,s,COMPA_Embankment
+aatt,MAT_SOIL,,TYPE_182
+aesize,all,FEM_EMBK_esize
+
+esel,u,elem,,all
+nsel,u,node,,all
+amesh,all
+cm,COMPN_Embankment,node
+cm,COMPE_Embankment,elem
+!
+!
+!
+!!
+!! 4.2 ABUTMENT
+!!
+cmsel,s,COMPA_Abutment
+aatt,MAT_CONC,,TYPE_182
+aesize,all,FEM_ABT_esize
+
+esel,u,elem,,all
+nsel,u,node,,all
+amesh,all
+cm,COMPN_Abutment,node
+cm,COMPE_Abutment,elem
+!
+!
+!
+!!
+!! 4.3 SOIL-STRUCTURE CONTACT
+!!
+*if,GEO_ABT_opt,eq,1,then
+
+    allsel
+
+    csys,CS_ABT
+
+        ! Vertical faces of the pile
+        lsel,s,loc,x,(GEO_CAP_w+GEO_PILE_d)/2
+        lsel,a,loc,x,(GEO_CAP_w-GEO_PILE_d)/2
+        lsel,r,loc,y,0,-GEO_PILE_l
+
+        ! Embankment side: wall & cap aligned vertical faces
+        lsel,a,loc,x,GEO_CAP_w
+
+        ! Free side: cap vertical face
+        lsel,a,loc,x,0
+
+        cm,COMPL_xSel,line
+
+        ! Horizontal face at the bottom of the cap
+        lsel,s,loc,y,0
+        lsel,u,loc,x,(GEO_CAP_w-GEO_PILE_d)/2,(GEO_CAP_w+GEO_PILE_d)/2
+
+        ! Horizontal face at the bottom of the pile
+        lsel,a,loc,y,-GEO_PILE_l
+
+        cm,COMPL_ySel,line
+
+        ! Aggregage components
+        cmsel,s,COMPL_xSel
+        cmsel,a,COMPL_ySel
+        cm,COMPL_interface,line
+
+    csys,CS_GLOBAL
+
+    ! Contact face: soil elements
+    cmsel,s,COMPL_interface
+    cmsel,s,COMPA_Embankment
+    lsla,r
+    cm,COMPL_EmbkInterface,line
+
+    nsll,s,1
+    esln,s,0,active
+    cm,COMPN_EmbkInterface,node
+    cm,COMPE_EmbkInterface,elem
+
+    ! Target face: abutment elements
+    cmsel,s,COMPL_interface
+    cmsel,s,COMPA_Abutment
+    lsla,r
+    cm,COMPL_AbtInterface,line
+
+    nsll,s,1
+    esln,s,0,active
+    cm,COMPN_AbtInterface,node
+    cm,COMPE_AbtInterface,elem
+
+    ! Create target-contact pair
+    ! CNTDEF,   targeCMsuf,      contaCMsuf,  targeEType,   contaEType, surfBehavior, friction, keyoptArray, rcArray
+    !cntdef, 'AbtInterface', 'EmbkInterface', TARGET_TYPE, CONTACT_TYPE,            0,   MAT_mu
+
+    allsel
+    gcgen,new
+*endif
+!
+!
+!
+!!
+!! 4.4 DISPLAY
+!!
+allsel
+/color,cm,oran,COMPE_Embankment
+/color,cm,lgra,COMPE_Abutment
+eplot
+takepic,'MESH',1200
+
+

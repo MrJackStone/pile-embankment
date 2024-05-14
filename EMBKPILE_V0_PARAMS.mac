@@ -1,0 +1,109 @@
+!!
+!!
+!! 2. PARAMETERS
+!!
+!!
+
+!!
+!! 2.0 CONSTANTS
+!!
+TYPE_182=1
+
+MAT_SOIL=1
+MAT_CONC=2
+MAT_INFIN=3
+
+TARGET_TYPE=169
+CONTACT_TYPE=172
+
+CS_GLOBAL=0
+CS_ABT=11
+!
+!
+!
+!!
+!! 2.1 GEOMETRY
+!!
+! Total height
+GEO_hTot=GEO_h+GEO_depth
+
+! Check and adjust slope angle
+GEO_theta=(abs(GEO_theta)<90)
+
+! Width at the sloped embankment face
+*if,GEO_theta,eq,90,then
+    GEO_w=0
+*else
+    *afun,deg
+    GEO_w=GEO_h/tan(GEO_theta)
+    *afun,rad
+*endif
+
+! Total width
+GEO_wTot=GEO_wBot+GEO_w+GEO_wTop
+
+*if,GEO_ABT_opt,eq,1,then
+    ! Offsets from global CS to abutment's local CS
+    GEO_yOff=GEO_h-(GEO_WALL_h+GEO_CAP_h)
+    GEO_xOff=GEO_ABT_step-GEO_CAP_w
+
+    ! Soil refill width at the top of the wall
+    GEO_REFILL_w=GEO_w-GEO_ABT_step
+
+    ! Horizontal distance from the external face of the pile cap to the external face fo the pile
+    GEO_CAP_e=(GEO_CAP_w-GEO_PILE_d)/2
+*endif
+!
+!
+!
+!!
+!! 2.2 MATERIALS
+!!
+MAT_CONC_E=4760*sqrt(MAT_CONC_fck*1e-6)*1e6
+!
+!
+!
+!!
+!! 2.2 ATTRIBUTES
+!!
+/prep7
+
+!! 2.2.1 ELEMENT TYPES
+!!
+et,TYPE_182,182
+keyopt,TYPE_182,3,2 ! plane strain
+!
+!
+!! 2.2.2 MATERIALS
+!!
+
+!! 2.2.2.1 SOIL
+mp,   ex, MAT_SOIL, MAT_SOIL_E
+mp, prxy, MAT_SOIL, MAT_SOIL_poisson
+mp, dens, MAT_SOIL, MAT_SSOIL_dens
+
+!! 2.2.2.2 CONCRETE
+mp,   ex, MAT_CONC, MAT_CONC_E
+mp, prxy, MAT_CONC, MAT_CONC_poisson
+mp, dens, MAT_CONC, MAT_CONC_dens
+
+!! 2.2.2.3 INFINITE BC
+mp,   ex, MAT_INFIN, MAT_SOIL_E
+mp, prxy, MAT_INFIN, MAT_SOIL_poisson
+mp, dens, MAT_INFIN, MAT_SSOIL_dens
+!
+!
+!! 2.2.3 COORDINATE SYSTEMS
+!!
+csys,CS_GLOBAL
+
+! At abutment's pile cap vertex
+local,CS_ABT,cart,GEO_xOff,GEO_yOff
+
+csys,CS_GLOBAL
+!
+!
+!! 2.2.4 REAL CONSTANTS
+!!
+r,1
+

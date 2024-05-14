@@ -1,0 +1,22 @@
+! EMBKPILE_V0_SOLU
+
+!!
+!!
+!! 6. SOLUTION
+!!
+!!
+/solu
+
+allsel
+
+antype,0
+
+nsubst,SOLU_nsubst
+nlgeom,on
+
+outres,erase
+outres,all,all
+
+solve
+
+

@@ -1,0 +1,157 @@
+! EMBKPILE_V0_BC
+
+!!
+!!
+!! 5. BOUNDARY CONDITIONS
+!!
+!!
+
+!!
+!! 5.1 SUPPORTS
+!!
+
+!! 5.1.1 BOTTOM FACE
+!!
+! Pole nodes
+refY=FEM_EMBK_esize-GEO_depth
+nsel,s,loc,y,refY
+leftPoleNode=node(FEM_EMBK_esize-GEO_wBot,refY,0)
+rightPoleNode=node(GEO_w+GEO_wTop-FEM_EMBK_esize,refY,0)
+
+! Select target nodes
+allsel
+nsel,u,loc,x,-GEO_wBot,FEM_EMBK_esize-GEO_wBot
+nsel,a,loc,x,FEM_EMBK_esize-GEO_wBot
+nsel,u,loc,x,GEO_w+GEO_wTop-FEM_EMBK_esize,GEO_w+GEO_wTop
+nsel,a,loc,x,GEO_w+GEO_wTop-FEM_EMBK_esize
+nsel,r,loc,y,-GEO_depth
+
+! Generate infin257 elements
+einfin,,leftPoleNode,rightPoleNode,,MAT_INFIN
+!
+!
+!! 5.1.2 LEFT FACE
+!!
+! Pole nodes
+refX=FEM_EMBK_esize-GEO_wBot
+nsel,s,loc,x,refX
+bottomPoleNode=node(refX,FEM_EMBK_esize-GEO_depth,0)
+topPoleNode=node(refX,-FEM_EMBK_esize,0)
+
+! Select target nodes
+allsel
+nsel,u,loc,y,-GEO_depth,FEM_EMBK_esize-GEO_depth
+nsel,a,loc,y,FEM_EMBK_esize-GEO_depth
+nsel,r,loc,x,-GEO_wBot
+
+! Generate infin257 elements
+einfin,,bottomPoleNode,topPoleNode,,MAT_INFIN
+!
+!
+!! 5.1.3 RIGHT FACE
+!!
+! Pole nodes
+refX=GEO_w+GEO_wTop-FEM_EMBK_esize
+nsel,s,loc,x,refX
+bottomPoleNode=node(refX,FEM_EMBK_esize-GEO_depth,0)
+topPoleNode=node(refX,GEO_h-FEM_EMBK_esize,0)
+
+! Select target nodes
+allsel
+nsel,u,loc,y,-GEO_depth,FEM_EMBK_esize-GEO_depth
+nsel,a,loc,y,FEM_EMBK_esize-GEO_depth
+nsel,r,loc,x,GEO_w+GEO_wTop
+
+! Generate infin257 elements
+einfin,,bottomPoleNode,topPoleNode,,MAT_INFIN
+!
+!
+!! 5.1.4 LOWER LEFT CORNER
+!!
+! Pole node
+allsel
+refX=FEM_EMBK_esize-GEO_wBot
+refY=FEM_EMBK_esize-GEO_depth
+poleNode=node(refX,refY,0)
+
+! Select target nodes
+nsel,s,loc,x,-GEO_wBot,refX
+nsel,r,loc,y,-GEO_depth
+cm,COMPN_xSel,node
+
+nsel,s,loc,y,-GEO_depth,refY
+nsel,r,loc,x,-GEO_wBot
+cm,COMPN_ySel,node
+
+cmsel,s,COMPN_xSel
+cmsel,a,COMPN_ySel
+
+! Generate infin257 elements
+einfin,,poleNode,,,MAT_INFIN
+!
+!
+!! 5.1.5 LOWER RIGHT CORNER
+!!
+! Pole node
+allsel
+refX=GEO_w+GEO_wTop-FEM_EMBK_esize
+refY=FEM_EMBK_esize-GEO_depth
+poleNode=node(refX,refY,0)
+
+! Select target nodes
+nsel,s,loc,x,refX,GEO_w+GEO_wTop
+nsel,r,loc,y,-GEO_depth
+cm,COMPN_xSel,node
+
+nsel,s,loc,y,-GEO_depth,refY
+nsel,r,loc,x,GEO_w+GEO_wTop
+cm,COMPN_ySel,node
+
+cmsel,s,COMPN_xSel
+cmsel,a,COMPN_ySel
+
+! Generate infin257 elements
+einfin,,poleNode,,,MAT_INFIN
+!
+!
+!
+!!
+!! 5.2 LOADS
+!!
+! Dead weight
+acel,,LOAD_g
+
+!! 5.2.1 ON THE ABUTMENT
+!!
+csys,CS_ABT
+
+    ! Select nodes at the top of the cap
+    lsel,s,loc,y,GEO_CAP_h
+    lsel,r,loc,x,0,GEO_CAP_w-GEO_WALL_t
+    cmsel,s,COMPA_Abutment
+    lsla,r
+    nsll,s,1
+    cm,COMPN_ABT_loaded,node
+
+    ! Apply abutment loads
+    *get,nc,node,,count
+    nodal_fx=-LOAD_ABT_fh/nc
+    nodal_fy=-LOAD_ABT_fv/nc
+    cmsel,s,COMPN_ABT_loaded
+    f,COMPN_ABT_loaded,fx,nodal_fx
+    f,COMPN_ABT_loaded,fy,nodal_fy
+
+csys,CS_GLOBAL
+!
+!
+!! 5.2.2 AT THE TOP OF THE EMBANKMENT
+!!
+csys,CS_GLOBAL
+
+lsel,s,loc,y,GEO_h
+cmsel,s,COMPA_Embankment
+lsla,r
+cm,COMPL_ABT_loaded,line
+
+sfl,COMPL_ABT_loaded,pres,LOAD_EMBK_q
+
